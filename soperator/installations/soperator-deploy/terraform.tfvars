@@ -7,10 +7,10 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Name of the company. It is used for context name of the cluster in .kubeconfig file.
-company_name = ""
+company_name = "behnam"
 
 # Whether the cluster is production or not.
-production = true
+production = false
 
 # Follow the installation guide and put IAM merge request URL here.
 # Required if production = true.
@@ -40,18 +40,10 @@ controller_state_on_filestore = false
 # Remains for the backward compatibility.
 # ---
 filestore_controller_spool = {
-  spec = {
-    size_gibibytes       = 128
-    block_size_kibibytes = 4
+  existing = {
+    id = "computefilesystem-e02kwsfke317jevds1"
   }
 }
-# Or use existing filestore.
-# ---
-# filestore_controller_spool = {
-#   existing = {
-#     id = "computefilesystem-<YOUR-FILESTORE-ID>"
-#   }
-# }
 
 # Shared filesystem to be used on controller, worker, and login nodes.
 # Notice that auto-backups are enabled for filesystems with size less than 12 TiB.
@@ -67,7 +59,7 @@ filestore_controller_spool = {
 # ---
 filestore_jail = {
   existing = {
-    id = "computefilesystem-<YOUR-FILESTORE-ID>"
+    id = "computefilesystem-e02j5pw8f0z0rmf9gq"
   }
 }
 
@@ -89,7 +81,7 @@ filestore_jail_submounts = [{
   name       = "data"
   mount_path = "/mnt/data"
   existing = {
-    id = "computefilesystem-<YOUR-FILESTORE-ID>"
+    id = "computefilesystem-e02c40yywsa2wecdp6"
   }
 }]
 
@@ -121,7 +113,6 @@ node_local_image_disk = {
   spec = {
     size_gibibytes  = 930
     filesystem_type = "ext4"
-    # Could be changed to `NETWORK_SSD_NON_REPLICATED`
     disk_type = "NETWORK_SSD_IO_M3"
   }
 }
@@ -166,7 +157,7 @@ nfs_in_k8s = {
   size_gibibytes  = 3720
   disk_type       = "NETWORK_SSD_IO_M3"
   filesystem_type = "ext4"
-  threads         = 32 # to match preset in slurm_nodeset_nfs
+  threads         = 32
 }
 
 # endregion nfs-server
@@ -300,51 +291,26 @@ slurm_nodeset_controller = {
 slurm_nodeset_workers = [
   {
     name = "worker"
-    size = 128
-    # Autoscaling configuration. Set enabled = false to use fixed node count instead.
+    size = 2
     autoscaling = {
-      enabled = true
-      # min_size options:
-      # - null: min=max, no scale-down (default, recommended - saves ~10 min on initial provisioning)
-      #   it can be changed to a number later if needed.
-      # - N: can scale down to N nodes
+      enabled  = false
       min_size = null
     }
     resource = {
-      platform = "gpu-h100-sxm"
-      preset   = "8gpu-128vcpu-1600gb"
+      platform = "gpu-l40s-a"
+      preset   = "1gpu-16vcpu-64gb"
     }
     boot_disk = {
       type                 = "NETWORK_SSD"
-      size_gibibytes       = 512
+      size_gibibytes       = 256
       block_size_kibibytes = 4
     }
-    gpu_cluster = {
-      infiniband_fabric = ""
-    }
-    # Change to preemptible = {} in case you want to use preemptible nodes
+    # No gpu_cluster — L40s does not support InfiniBand
+    # Change to preemptible = {} if no PAYG L40s capacity available
     preemptible = null
-    # Use reservation_policy to leverage compute reservations (capacity blocks)
-    # reservation_policy = {
-    #   policy          = "AUTO"  # AUTO, FORBID, or STRICT
-    #   reservation_ids = ["capacityblockgroup-xYYzzzzzz"]
-    # }
-    # Provide a list of strings to set Slurm Node features
     features = null
-    # Set to `true` to create partition for the NodeSet by default
     create_partition = null
-    # Whether to enable ephemeral nodes behavior for this worker nodeset.
-    # When true, nodes will use dynamic topology injection and power management.
-    # By default, false.
     ephemeral_nodes = false
-    # Optional local NVMe passthrough for this nodeset only.
-    # Uses local instance disks, creates a RAID0 array and mounts it on the host via cloud-init.
-    # mount_path: path used for both host RAID mount and jail submount.
-    # local_nvme = {
-    #   enabled         = true
-    #   mount_path      = "/mnt/local-nvme"
-    #   filesystem_type = "ext4"
-    # }
   },
 ]
 
@@ -421,7 +387,7 @@ tailscale_enabled = false
 # Authorized keys accepted for connecting to Slurm login nodes via SSH as 'root' user.
 # ---
 slurm_login_ssh_root_public_keys = [
-  "",
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJVuHFci30G3rirFxwasUXOICceTYTkPM6PMHt1kGsm9 b.hajian@gmail.com",
 ]
 
 # endregion Login
@@ -502,7 +468,7 @@ soperator_notifier = {
   enabled = false
 }
 
-public_o11y_enabled = true
+public_o11y_enabled = false
 
 # endregion Telemetry
 
